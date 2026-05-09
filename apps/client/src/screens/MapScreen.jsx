@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import MapView from '../components/Map/MapView'
-import PanicButton from '../components/PanicButton/PanicButton'
+import { PanicFlow } from '../panic/PanicFlow'
 import NavBar from '../components/UI/NavBar'
 import LiveBadge from '../components/UI/LiveBadge'
 import LangToggle from '../components/UI/LangToggle'
@@ -51,7 +51,7 @@ export default function MapScreen({ activeScreen, onNavigate }) {
         flexDirection: 'column',
         alignItems: 'center',
       }}>
-        <PanicButton lang={lang} />
+        <PanicFlow />
       </div>
 
       <NavBar activeScreen={activeScreen} onNavigate={onNavigate} />
