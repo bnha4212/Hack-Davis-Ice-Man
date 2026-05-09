@@ -1,0 +1,14 @@
+---
+description: safeguard-panic / Hack-Davis-Ice-Man — read CAPSULES.md first for full context
+alwaysApply: true
+---
+
+# safeguard-panic — start here
+
+**Before editing this project, read `CAPSULES.md` at the repository root first.** It has the five capsules (overview, implementation, reliability, Git/GitHub, next steps).
+
+**One-line summary:** Vite + React + TS panic demo — hold-to-record → transcript → bilingual (EN/ES) → SMS step; adapters in `src/panic/panicServices.ts`; UI in `PanicFlow.tsx` + `PanicFlow.css`. Repo also includes merged **`backend/`** for server-side work.
+
+**Do not casually remove** panic reliability patterns: pointer capture, inflight/finish/confirm-send mutexes, stop-before-start, window pointer fallback, reduced-motion and touch CSS — details in `CAPSULES.md` §3.
+
+**Git:** `origin` is `https://github.com/bnha4212/Hack-Davis-Ice-Man.git`; work on **`main`**; avoid **force push** unless the team explicitly agrees.
