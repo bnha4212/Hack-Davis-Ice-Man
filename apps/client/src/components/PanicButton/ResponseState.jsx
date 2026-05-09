@@ -1,18 +1,4 @@
-import { SERVER_URL } from '@iceman/shared'
-
 export default function ResponseState({ responseEn, responseEs, lang, contacts, onClose }) {
-  const handleSendSMS = async () => {
-    try {
-      await fetch(SERVER_URL + '/api/panic/sms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contacts }),
-      })
-    } catch {
-      // Brandon's endpoint not yet available
-    }
-  }
-
   return (
     <div style={{
       position: 'fixed',
@@ -31,6 +17,26 @@ export default function ResponseState({ responseEn, responseEs, lang, contacts, 
           <i className="ti ti-x" style={{ fontSize: 20 }} />
         </button>
       </div>
+
+      {/* SMS sent confirmation */}
+      {contacts && contacts.length > 0 && (
+        <div style={{
+          background: '#0d2e1a',
+          border: '1px solid #1a5c34',
+          borderRadius: 12,
+          padding: '10px 14px',
+          marginBottom: 14,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}>
+          <i className="ti ti-check" style={{ fontSize: 18, color: '#4ade80', flexShrink: 0 }} />
+          <span style={{ fontSize: 13, color: '#4ade80' }}>
+            SMS alert sent to {contacts.length} contact{contacts.length !== 1 ? 's' : ''}:{' '}
+            {contacts.map((c) => c.name).join(', ')}
+          </span>
+        </div>
+      )}
 
       {/* English card */}
       <div style={{
@@ -76,43 +82,20 @@ export default function ResponseState({ responseEn, responseEs, lang, contacts, 
         <p style={{ fontSize: 14, color: '#e2e4ea', lineHeight: 1.6 }}>{responseEs || '—'}</p>
       </div>
 
-      {/* Contacts row */}
-      {contacts && contacts.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-          {contacts.map((c, i) => (
-            <span key={i} style={{
-              background: '#1e2333',
-              border: '1px solid #2e3347',
-              borderRadius: 20,
-              padding: '4px 12px',
-              fontSize: 12,
-              color: '#9ca3af',
-            }}>
-              {c.name}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* SMS button */}
       <button
-        onClick={handleSendSMS}
+        onClick={onClose}
         style={{
           width: '100%',
-          background: '#e55c3a',
-          color: '#fff',
+          background: '#1e2333',
+          color: '#e2e4ea',
           borderRadius: 12,
           padding: '14px',
           fontSize: 15,
           fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
+          border: '1px solid #2e3347',
         }}
       >
-        <i className="ti ti-message" style={{ fontSize: 18 }} />
-        Send SMS Alert
+        Done
       </button>
     </div>
   )

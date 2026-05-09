@@ -25,6 +25,7 @@ const mongoose = require('mongoose');
 const { Server } = require('socket.io');
 
 const reportsRouter = require('./routes/reports');
+const panicRouter = require('./routes/panic');
 const { startScraperScheduler } = require('./services/scraper');
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -54,6 +55,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/reports', reportsRouter);
+app.use('/api/panic', panicRouter);
 
 app.use((err, _req, res, _next) => {
   console.error('[api]', err);

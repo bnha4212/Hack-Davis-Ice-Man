@@ -1,0 +1,109 @@
+const express = require('express')
+const multer = require('multer')
+const { Readable } = require('stream')
+const OpenAI = require('openai')
+const twilio = require('twilio')
+const Anthropic = require('@anthropic-ai/sdk')
+
+const router = express.Router()
+const upload = multer({ storage: multer.memoryStorage() })
+
+function getOpenAI() {
+  const apiKey = (process.env.OPENAI_API_KEY || '').trim()
+  if (!apiKey) throw new Error('OPENAI_API_KEY is not set')
+  return new OpenAI({ apiKey })
+}
+
+function getTwilio() {
+  const sid = (process.env.TWILIO_ACCOUNT_SID || '').trim()
+  const token = (process.env.TWILIO_AUTH_TOKEN || '').trim()
+  if (!sid || !token) throw new Error('Twilio credentials not set')
+  return twilio(sid, token)
+}
+
+function getAnthropic() {
+  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set')
+  return new Anthropic({ apiKey })
+}
+
+async function transcribeAudio(buffer, mimetype) {
+  const openai = getOpenAI()
+  const ext = mimetype.includes('mp4') ? 'mp4' : 'webm'
+  const file = new File([buffer], `audio.${ext}`, { type: mimetype })
+  const result = await openai.audio.transcriptions.create({
+    file,
+    model: 'whisper-1',
+  })
+  return result.text
+}
+
+async function generateBilingualResponse(transcript) {
+  const anthropic = getAnthropic()
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 512,
+    system: `You are a legal rights assistant for immigrants. Given a user's distress message, respond with clear, calm guidance about their rights in English and Spanish. Be concise (2-3 sentences each). Reply with ONLY valid JSON: {"en": "...", "es": "..."}`,
+    messages: [{ role: 'user', content: transcript }],
+  })
+  const raw = response.content.find((b) => b.type === 'text')?.text || '{}'
+  const match = raw.match(/\{[\s\S]*\}/)
+  const parsed = JSON.parse(match ? match[0] : '{}')
+  return {
+    responseEn: parsed.en || 'You have the right to remain silent and the right to an attorney.',
+    responseEs: parsed.es || 'Tiene derecho a guardar silencio y derecho a un abogado.',
+  }
+}
+
+async function sendSMSToContacts(contacts, transcript, responseEn) {
+  const from = (process.env.TWILIO_PHONE_NUMBER || '').trim()
+  if (!from || !contacts.length) return
+
+  const client = getTwilio()
+  const body = `ICEMAN ALERT: "${transcript.slice(0, 120)}..." — ${responseEn.slice(0, 100)}`
+
+  await Promise.allSettled(
+    contacts.map((c) =>
+      client.messages.create({ to: c.phone, from, body })
+    )
+  )
+}
+
+// POST /api/panic  — audio + contacts → transcribe → bilingual response → SMS
+router.post('/', upload.single('audio'), async (req, res) => {
+  try {
+    const contacts = JSON.parse(req.body.contacts || '[]')
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file uploaded' })
+    }
+
+    const transcript = await transcribeAudio(req.file.buffer, req.file.mimetype)
+    const { responseEn, responseEs } = await generateBilingualResponse(transcript)
+
+    // Fire SMS without blocking the response
+    sendSMSToContacts(contacts, transcript, responseEn).catch((err) =>
+      console.error('[panic] SMS error:', err.message)
+    )
+
+    res.json({ transcript, responseEn, responseEs })
+  } catch (err) {
+    console.error('[panic]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/panic/sms  — re-send SMS manually (used from contacts screen)
+router.post('/sms', express.json(), async (req, res) => {
+  try {
+    const { contacts, message } = req.body
+    const text = message || 'ICEMAN ALERT — someone in your network may need help.'
+    await sendSMSToContacts(contacts || [], text, '')
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('[panic/sms]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+module.exports = router
