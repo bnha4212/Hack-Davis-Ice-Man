@@ -24,15 +24,6 @@ export default function HomeScreen({ activeScreen, onNavigate }) {
         alignItems: 'center',
         padding: '52px 20px 100px',
       }}>
-        <div style={{ marginBottom: 28, textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.5px', color: '#e2e4ea' }}>
-            ICEMAN
-          </div>
-          <div style={{ fontSize: 13, color: '#5a5f70', marginTop: 4 }}>
-            Know your rights. Stay safe.
-          </div>
-        </div>
-
         <PanicFlow />
       </div>
 
