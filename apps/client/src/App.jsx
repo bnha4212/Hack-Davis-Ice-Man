@@ -3,6 +3,7 @@ import HomeScreen from './screens/HomeScreen'
 import MapScreen from './screens/MapScreen'
 import RightsScreen from './screens/RightsScreen'
 import ContactsScreen from './screens/ContactsScreen'
+import SettingsScreen from './screens/SettingsScreen'
 import { useSocket } from './hooks/useSocket'
 import { useOffline } from './hooks/useOffline'
 
@@ -16,6 +17,7 @@ export default function App() {
     map: <MapScreen activeScreen={activeScreen} onNavigate={setActiveScreen} />,
     rights: <RightsScreen activeScreen={activeScreen} onNavigate={setActiveScreen} />,
     contacts: <ContactsScreen activeScreen={activeScreen} onNavigate={setActiveScreen} />,
+    settings: <SettingsScreen activeScreen={activeScreen} onNavigate={setActiveScreen} />,
   }
 
   return (
