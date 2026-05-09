@@ -1,8 +1,30 @@
 /**
- * Boundary types for later integrations:
- * - transcribeAudio → OpenAI Whisper (or similar) from recorded Blob
- * - composeBilingualResponse → Claude (or similar) from transcript
- * - sendPanicSms → Twilio (server-side) with the composed text + context
+ * Panic pipeline adapters — swap implementations without changing the UI.
+ *
+ * --------------------------------------------------------------------------
+ * TODO — Whisper (or other STT)
+ * --------------------------------------------------------------------------
+ * Replace `mockTranscribeAudio`:
+ * - POST `audio` (multipart or base64) to your backend or OpenAI `/v1/audio/transcriptions`.
+ * - Do not expose API keys in the browser; call from a server you control.
+ * - Return the transcript string (and handle errors / timeouts).
+ *
+ * --------------------------------------------------------------------------
+ * TODO — Claude (or other LLM)
+ * --------------------------------------------------------------------------
+ * Replace `mockComposeBilingualResponse`:
+ * - Send `transcript` + safety/system prompts to Anthropic Messages API (server-side).
+ * - Parse structured EN/ES fields from the response (or ask the model for JSON).
+ * - Keep copy concise for SMS context.
+ *
+ * --------------------------------------------------------------------------
+ * TODO — Twilio SMS
+ * --------------------------------------------------------------------------
+ * Replace `mockSendPanicSms`:
+ * - From your backend, call Twilio REST API with `TWILIO_ACCOUNT_SID` + auth token
+ *   (or API key) — never ship secrets to the client.
+ * - Payload should include `transcript` and `message.en` / `message.es` (or your template).
+ * - Log message SID / failures for support.
  */
 
 export type BilingualMessage = {
@@ -23,7 +45,7 @@ export type PanicServices = {
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-/** Demo stand-in: replace with Whisper API call that posts `audio`. */
+/** Demo only — TODO: Whisper / STT (see file header). */
 export async function mockTranscribeAudio(audio: Blob): Promise<string> {
   await delay(650)
   if (audio.size < 200) {
@@ -32,7 +54,7 @@ export async function mockTranscribeAudio(audio: Blob): Promise<string> {
   return '[Demo transcript] I need help. I am in an uncomfortable situation and would like someone to check on me or meet me at my location.'
 }
 
-/** Demo stand-in: replace with Claude (or other LLM) using `transcript`. */
+/** Demo only — TODO: Claude / LLM (see file header). */
 export async function mockComposeBilingualResponse(
   transcript: string,
 ): Promise<BilingualMessage> {
@@ -43,7 +65,7 @@ export async function mockComposeBilingualResponse(
   }
 }
 
-/** Demo stand-in: replace with Twilio call from your backend (do not use secrets in the browser). */
+/** Demo only — TODO: Twilio via backend (see file header). */
 export async function mockSendPanicSms(payload: PanicSmsPayload): Promise<void> {
   await delay(400)
   if (typeof payload.transcript !== 'string' || !payload.message) {
@@ -51,6 +73,7 @@ export async function mockSendPanicSms(payload: PanicSmsPayload): Promise<void> 
   }
 }
 
+/** Wire real APIs by replacing these functions — see TODO blocks at top of file. */
 export const defaultPanicServices: PanicServices = {
   transcribeAudio: mockTranscribeAudio,
   composeBilingualResponse: mockComposeBilingualResponse,
