@@ -1,0 +1,28 @@
+{
+  "name": "safeguard-map-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SafeGuard live map backend — reports API, Socket.io, Claude parsing, scrapers",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongodb": "^7.2.0",
+    "mongoose": "^8.9.3",
+    "rss-parser": "^3.13.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
