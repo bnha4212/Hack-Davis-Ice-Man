@@ -1,5 +1,22 @@
+const fs = require('fs');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+function loadEnv() {
+  const primary = path.join(__dirname, '.env');
+  require('dotenv').config({ path: primary });
+
+  if (!(process.env.ANTHROPIC_API_KEY || '').trim()) {
+    const cwdEnv = path.join(process.cwd(), '.env');
+    if (cwdEnv !== primary && fs.existsSync(cwdEnv)) {
+      require('dotenv').config({ path: cwdEnv, override: true });
+    }
+  }
+
+  if (!fs.existsSync(primary) && !fs.existsSync(path.join(process.cwd(), '.env'))) {
+    console.warn('[dotenv] No .env file found next to index.js or in process.cwd()');
+  }
+}
+loadEnv();
 
 const express = require('express');
 const http = require('http');

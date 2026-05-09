@@ -30,6 +30,19 @@ const REDDIT_HEADERS = {
 
 const MAX_ITEMS_PER_RUN = 24;
 
+/**
+ * Only treat posts as ICE-related if the text explicitly mentions the agency
+ * (#ICE, word ICE, or I.C.E.). Does not match unrelated uses like "police".
+ */
+function textMentionsIceAgency(text) {
+  if (!text || typeof text !== 'string') return false;
+  const s = text;
+  if (/#ICE\b/i.test(s)) return true;
+  if (/\bICE\b/i.test(s)) return true;
+  if (/I\s*\.\s*C\s*\.\s*E\b/i.test(s)) return true;
+  return false;
+}
+
 async function fetchRedditForTerm(term) {
   const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(term)}&limit=15&sort=new`;
   const { data } = await axios.get(url, {
@@ -95,6 +108,10 @@ async function processScrapedItem(item, io) {
   const text = `${item.title}\n\n${item.body}`.trim();
   if (text.length < 20) return;
 
+  if (!textMentionsIceAgency(text)) {
+    return;
+  }
+
   let parsed;
   try {
     parsed = await parseLocationFromText(text);
@@ -136,6 +153,14 @@ async function runScrapeCycle(io) {
     return;
   }
 
+  const beforeIceFilter = items.length;
+  items = items.filter((item) =>
+    textMentionsIceAgency(`${item.title}\n${item.body}`)
+  );
+  console.log(
+    `[scraper] ICE mention filter: ${beforeIceFilter} -> ${items.length} items (require #ICE, word ICE, or I.C.E.)`
+  );
+
   const slice = items.slice(0, MAX_ITEMS_PER_RUN);
   console.log(`[scraper] Processing ${slice.length} unique items (cap ${MAX_ITEMS_PER_RUN})`);
 
@@ -154,7 +179,8 @@ async function runScrapeCycle(io) {
  * @param {import('socket.io').Server} io
  */
 function startScraperScheduler(io) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim();
+  if (!apiKey) {
     console.warn('[scraper] ANTHROPIC_API_KEY not set — scheduled Reddit/Google News ingestion disabled');
     return;
   }
@@ -173,4 +199,5 @@ module.exports = {
   startScraperScheduler,
   runScrapeCycle,
   SEARCH_TERMS,
+  textMentionsIceAgency,
 };
