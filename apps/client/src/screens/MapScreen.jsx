@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import MapView from '../components/Map/MapView'
-import { PanicFlow } from '../panic/PanicFlow'
 import NavBar from '../components/UI/NavBar'
 import LiveBadge from '../components/UI/LiveBadge'
 import LangToggle from '../components/UI/LangToggle'
@@ -30,7 +29,7 @@ export default function MapScreen({ activeScreen, onNavigate }) {
         zIndex: 10,
       }}>
         <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: '#e2e4ea' }}>
-          Iceman
+          ICE Activity
         </span>
         <LiveBadge count={pins.length} connected={connected} />
       </div>
@@ -38,20 +37,6 @@ export default function MapScreen({ activeScreen, onNavigate }) {
       {/* Top-right: lang toggle */}
       <div style={{ position: 'absolute', top: isOffline ? 44 : 16, right: 16, zIndex: 10 }}>
         <LangToggle lang={lang} onToggle={setLang} />
-      </div>
-
-      {/* Bottom center: panic button */}
-      <div style={{
-        position: 'absolute',
-        bottom: 80,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 10,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}>
-        <PanicFlow />
       </div>
 
       <NavBar activeScreen={activeScreen} onNavigate={onNavigate} />

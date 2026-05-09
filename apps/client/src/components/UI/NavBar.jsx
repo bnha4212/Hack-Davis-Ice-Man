@@ -1,8 +1,8 @@
 const tabs = [
+  { key: 'home', label: 'Home', icon: 'ti-home' },
   { key: 'map', label: 'Map', icon: 'ti-map-2' },
   { key: 'rights', label: 'Rights', icon: 'ti-shield' },
   { key: 'contacts', label: 'Contacts', icon: 'ti-users' },
-  { key: 'settings', label: 'Settings', icon: 'ti-settings' },
 ]
 
 export default function NavBar({ activeScreen, onNavigate }) {
