@@ -1,0 +1,12 @@
+{
+  "name": "iceman",
+  "private": true,
+  "workspaces": ["apps/client", "apps/server", "packages/shared"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/client\"",
+    "dev:client": "npm run dev --workspace=apps/client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
