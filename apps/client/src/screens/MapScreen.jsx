@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import MapView from '../components/Map/MapView'
+import ReconstructCapsule from '../components/Map/ReconstructCapsule'
 import NavBar from '../components/UI/NavBar'
 import LiveBadge from '../components/UI/LiveBadge'
 import LangToggle from '../components/UI/LangToggle'
@@ -17,6 +18,8 @@ export default function MapScreen({ activeScreen, onNavigate }) {
       <OfflineBanner isOffline={isOffline} />
 
       <MapView />
+
+      <ReconstructCapsule />
 
       {/* Top-left: wordmark + live badge */}
       <div style={{
