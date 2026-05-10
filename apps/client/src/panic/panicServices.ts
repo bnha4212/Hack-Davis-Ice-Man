@@ -112,7 +112,21 @@ export async function mockTranscribeAudio(
   }
 }
 
-/** Demo only — TODO: Claude / LLM (see file header). */
+/** Claude bilingual response + Twilio SMS via backend confirm endpoint. */
+export async function confirmAndSend(
+  transcript: string,
+  contacts: unknown[],
+): Promise<BilingualMessage> {
+  const res = await fetch(`${SERVER_URL}${API_ROUTES.PANIC_CONFIRM}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transcript, contacts }),
+  })
+  const raw = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(raw.error || `Confirm failed (${res.status})`)
+  return { en: raw.en || '', es: raw.es || '' }
+}
+
 export async function mockComposeBilingualResponse(
   transcript: string,
 ): Promise<BilingualMessage> {
@@ -123,7 +137,6 @@ export async function mockComposeBilingualResponse(
   }
 }
 
-/** Demo only — TODO: Twilio via backend (see file header). */
 export async function mockSendPanicSms(payload: PanicSmsPayload): Promise<void> {
   await delay(400)
   if (typeof payload.transcript !== 'string' || !payload.message) {
@@ -131,9 +144,13 @@ export async function mockSendPanicSms(payload: PanicSmsPayload): Promise<void> 
   }
 }
 
-/** Default: Whisper via your backend. Use `mockTranscribeAudio` for UI-only demos. */
+const contacts = () =>
+  JSON.parse(localStorage.getItem('iceman_contacts') || '[]')
+
+/** Default: real Whisper + Claude + Twilio via backend. */
 export const defaultPanicServices: PanicServices = {
   transcribeAudio: transcribeAudioOpenAI,
-  composeBilingualResponse: mockComposeBilingualResponse,
-  sendPanicSms: mockSendPanicSms,
+  composeBilingualResponse: (transcript) =>
+    confirmAndSend(transcript, contacts()),
+  sendPanicSms: () => Promise.resolve(),
 }

@@ -13,6 +13,8 @@ export const PIN_SOURCES = {
 
 export const API_ROUTES = {
   PANIC: '/api/panic',
+  PANIC_TRANSCRIBE: '/api/panic/transcribe',
+  PANIC_CONFIRM: '/api/panic/confirm',
   REPORTS: '/api/reports',
   HEALTH: '/api/health',
 }

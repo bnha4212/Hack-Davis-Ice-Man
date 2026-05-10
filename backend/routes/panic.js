@@ -93,6 +93,37 @@ router.post('/', upload.single('audio'), async (req, res) => {
   }
 })
 
+// POST /api/panic/transcribe  — audio → Whisper → { transcript, language }
+router.post('/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' })
+    const openai = getOpenAI()
+    const ext = req.file.mimetype.includes('mp4') ? 'mp4' : 'webm'
+    const file = new File([req.file.buffer], `audio.${ext}`, { type: req.file.mimetype })
+    const result = await openai.audio.translations.create({ file, model: 'whisper-1', response_format: 'verbose_json' })
+    res.json({ transcript: result.text?.trim() || '', language: result.language || null })
+  } catch (err) {
+    console.error('[panic/transcribe]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/panic/confirm  — { transcript, contacts } → Claude bilingual + Twilio SMS
+router.post('/confirm', express.json(), async (req, res) => {
+  try {
+    const { transcript, contacts = [] } = req.body || {}
+    if (!transcript) return res.status(400).json({ error: 'transcript is required' })
+    const { responseEn, responseEs } = await generateBilingualResponse(transcript)
+    sendSMSToContacts(contacts, transcript, responseEn).catch((err) =>
+      console.error('[panic/confirm] SMS error:', err.message)
+    )
+    res.json({ en: responseEn, es: responseEs })
+  } catch (err) {
+    console.error('[panic/confirm]', err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // POST /api/panic/sms  — re-send SMS manually (used from contacts screen)
 router.post('/sms', express.json(), async (req, res) => {
   try {
