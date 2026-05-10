@@ -38,6 +38,11 @@
 
 - **`backend/`** — Express-style API, models, routes, `services/claude.js`, `services/scraper.js`, etc. Treat as the integration home for server-side keys and Twilio later.
 
+### Map — Reconstruct capsule (`apps/client`)
+
+- **`ReconstructCapsule.jsx`** + **`ReconstructCapsule.css`** — When the map viewport is **zoomed in** (zoom ≥ 9) and **scraped** reports (**Reddit** / **Google News** via backend scraper) fall within **~30 km** of the map center, a **Reconstruct** control appears above the nav bar. It opens a sheet with a **combined digest** of Claude summaries plus **per-item cards** (summary + expandable **original scraped text**). Data is refreshed from **`GET /api/reports`** when the sheet opens so descriptions stay consistent with MongoDB.
+- **`mapSlice`** — Stores **`lng` / `lat` / `zoom`** from Mapbox (`moveend` / `zoomend`, throttled); **`MapView.jsx`** keeps it in sync for proximity checks.
+
 ---
 
 ## 3. Reliability decisions (do not regress casually)

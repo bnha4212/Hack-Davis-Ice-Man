@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { useAppSelector, useAppDispatch } from '../../store'
 import { setPins } from '../../store/pinsSlice'
+import { setViewport } from '../../store/mapSlice'
 import { fetchReports } from '../../services/api'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
@@ -12,9 +13,18 @@ function pinsToGeoJSON(pins) {
     features: pins.map((pin) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [pin.lng, pin.lat] },
-      properties: { score: pin.score ?? 1, source: pin.source ?? 'news' },
+      properties: {
+        score: pin.score ?? 1,
+        source: pin.source ?? 'news',
+        id: pin.id ?? '',
+      },
     })),
   }
+}
+
+function viewportFromMap(map) {
+  const c = map.getCenter()
+  return { lng: c.lng, lat: c.lat, zoom: map.getZoom() }
 }
 
 export default function MapView() {
@@ -22,6 +32,7 @@ export default function MapView() {
   const mapRef = useRef(null)
   const dispatch = useAppDispatch()
   const pins = useAppSelector((s) => s.pins.pins)
+  const viewportThrottleRef = useRef(0)
 
   useEffect(() => {
     const map = new mapboxgl.Map({
@@ -33,7 +44,22 @@ export default function MapView() {
 
     mapRef.current = map
 
+    const emitViewport = () => {
+      dispatch(setViewport(viewportFromMap(map)))
+    }
+
+    const onMoveEnd = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now()
+      if (now - viewportThrottleRef.current < 120) return
+      viewportThrottleRef.current = now
+      emitViewport()
+    }
+
+    map.on('moveend', onMoveEnd)
+    map.on('zoomend', onMoveEnd)
+
     map.on('load', () => {
+      emitViewport()
       map.addSource('reports', {
         type: 'geojson',
         data: { type: 'FeatureCollection', features: [] },
@@ -88,7 +114,11 @@ export default function MapView() {
         .catch(() => {})
     })
 
-    return () => map.remove()
+    return () => {
+      map.off('moveend', onMoveEnd)
+      map.off('zoomend', onMoveEnd)
+      map.remove()
+    }
   }, [dispatch])
 
   useEffect(() => {

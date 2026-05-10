@@ -1,0 +1,242 @@
+.reconstruct-entry-wrap {
+  position: absolute;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.reconstruct-entry-wrap .reconstruct-fab,
+.reconstruct-entry-wrap .reconstruct-hint {
+  pointer-events: auto;
+}
+
+.reconstruct-fab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: 1px solid #c94a3c55;
+  background: linear-gradient(145deg, #2a1210 0%, #1a1418 100%);
+  color: #f0e6e4;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(229, 92, 58, 0.25);
+}
+
+.reconstruct-fab:focus-visible {
+  outline: 2px solid #7eb3f5;
+  outline-offset: 2px;
+}
+
+.reconstruct-fab .ti {
+  font-size: 18px;
+  color: #e55c3a;
+}
+
+.reconstruct-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #8b91a3;
+  text-align: center;
+  line-height: 1.35;
+}
+
+.reconstruct-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(8, 10, 14, 0.72);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.reconstruct-sheet {
+  width: 100%;
+  max-width: 520px;
+  max-height: min(78vh, 640px);
+  overflow: auto;
+  background: #141824;
+  border: 1px solid #2e3347;
+  border-radius: 16px 16px 12px 12px;
+  padding: 18px 18px 22px;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.45);
+}
+
+.reconstruct-sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.reconstruct-sheet-head h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #e8eaef;
+  letter-spacing: -0.03em;
+}
+
+.reconstruct-sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #8b91a3;
+  line-height: 1.4;
+}
+
+.reconstruct-close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #2e3347;
+  background: #1a1f2e;
+  color: #c5c9d6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reconstruct-close:focus-visible {
+  outline: 2px solid #7eb3f5;
+  outline-offset: 2px;
+}
+
+.reconstruct-loading,
+.reconstruct-empty {
+  font-size: 13px;
+  color: #8b91a3;
+  margin: 8px 0 12px;
+}
+
+.reconstruct-digest {
+  margin-bottom: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #1c2233;
+  border: 1px solid #2a3148;
+}
+
+.reconstruct-digest h3 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7eb3f5;
+}
+
+.reconstruct-digest p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #d8dce8;
+}
+
+.reconstruct-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reconstruct-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: #181c28;
+  border: 1px solid #2c3244;
+}
+
+.reconstruct-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reconstruct-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.reconstruct-badge--reddit {
+  background: #ff450022;
+  color: #ff875a;
+  border: 1px solid #ff450044;
+}
+
+.reconstruct-badge--news {
+  background: #378add22;
+  color: #7eb3f5;
+  border: 1px solid #378add44;
+}
+
+.reconstruct-dist {
+  font-size: 11px;
+  color: #6d7385;
+}
+
+.reconstruct-summary {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #e2e4ea;
+}
+
+.reconstruct-details {
+  margin-top: 10px;
+}
+
+.reconstruct-details summary {
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #7eb3f5;
+  list-style: none;
+}
+
+.reconstruct-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.reconstruct-body {
+  margin: 10px 0 0;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #b4bac8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #0f1117;
+  border-radius: 8px;
+  border: 1px solid #252a3a;
+  max-height: 200px;
+  overflow: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reconstruct-fab {
+    box-shadow: none;
+  }
+}
