@@ -37,8 +37,8 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: 'Iceman',
-        short_name: 'Iceman',
+        name: 'Warrant',
+        short_name: 'Warrant',
         theme_color: '#0f1117',
         background_color: '#0f1117',
         display: 'standalone',
