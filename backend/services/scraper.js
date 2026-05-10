@@ -79,6 +79,32 @@ function textIsRaidOrDetentionSignal(text) {
   return raidLike || detainLike || sweepLike || checkpointEnforcement;
 }
 
+function textIsLikelyEditorialOrAnalysis(text) {
+  if (!text || typeof text !== 'string') return false;
+  const t = text.toLowerCase();
+  if (/\bop-?ed\b/.test(t)) return true;
+  if (/\beditorial\b/.test(t)) return true;
+  if (/\bopinion\s+(column|piece|section)\b/.test(t)) return true;
+  if (/\bcommentary\s*:/.test(t)) return true;
+  if (/\bcolumn:\s/.test(t)) return true;
+  return false;
+}
+
+/**
+ * Reject pieces that explicitly say there is no specific place to pin (common in op-eds / surveys).
+ */
+function impliesNoSpecificEnforcementLocation(summary, fullText) {
+  const s = `${summary || ''}\n${fullText || ''}`.toLowerCase();
+  if (s.includes('rather than a specific')) return true;
+  if (s.includes('broadly covers')) return true;
+  if (s.includes('not a specific city')) return true;
+  if (s.includes('no specific city')) return true;
+  if (s.includes('no specific location')) return true;
+  if (s.includes('no discrete location')) return true;
+  if (s.includes('broadly') && s.includes('rather than')) return true;
+  return false;
+}
+
 async function fetchRedditForTerm(term) {
   const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(term)}&limit=15&sort=new`;
   const { data } = await axios.get(url, {
@@ -148,11 +174,18 @@ async function processScrapedItem(item, io) {
     return;
   }
 
+  if (textIsLikelyEditorialOrAnalysis(text)) {
+    return;
+  }
+
   let parsed;
   try {
     parsed = await parseLocationFromText(text);
   } catch (err) {
     console.warn('[scraper] Claude parse failed:', err.message);
+    return;
+  }
+  if (impliesNoSpecificEnforcementLocation(parsed.summary, text)) {
     return;
   }
   if (parsed.confidence < 0.4) return;
@@ -190,11 +223,14 @@ async function runScrapeCycle(io) {
   }
 
   const beforeFilter = items.length;
-  items = items.filter((item) =>
-    textIsRaidOrDetentionSignal(`${item.title}\n${item.body}`)
-  );
+  items = items.filter((item) => {
+    const blob = `${item.title}\n${item.body}`;
+    return (
+      textIsRaidOrDetentionSignal(blob) && !textIsLikelyEditorialOrAnalysis(blob)
+    );
+  });
   console.log(
-    `[scraper] Raid/detention + ICE filter: ${beforeFilter} -> ${items.length} items`
+    `[scraper] Raid/detention + ICE filter (excl. editorials): ${beforeFilter} -> ${items.length} items`
   );
 
   const slice = items.slice(0, MAX_ITEMS_PER_RUN);
@@ -237,4 +273,6 @@ module.exports = {
   SEARCH_TERMS,
   textMentionsIceAgency,
   textIsRaidOrDetentionSignal,
+  textIsLikelyEditorialOrAnalysis,
+  impliesNoSpecificEnforcementLocation,
 };

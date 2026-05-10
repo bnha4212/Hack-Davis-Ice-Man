@@ -36,13 +36,14 @@
 
 ### Backend (from merged remote)
 
-- **`backend/`** — Express-style API, models, routes, `services/claude.js`, `services/scraper.js`, etc. Treat as the integration home for server-side keys and Twilio later. The **scraper** search terms target **ICE raids / arrests / detentions** (not generic ICE policy news); items must pass **`textIsRaidOrDetentionSignal`** (ICE mention + raid- or detention-like language) before Claude geocoding.
+- **`backend/`** — Express-style API, models, routes, `services/claude.js`, `services/scraper.js`, etc. The **scraper** uses **`textIsRaidOrDetentionSignal`**, skips **`textIsLikelyEditorialOrAnalysis`** (op-eds, editorials, opinion columns), and after Claude drops items where **`impliesNoSpecificEnforcementLocation`** (e.g. “broadly covers … rather than a specific city”). **`parseLocationFromText`** is instructed not to pin statewide/policy-only pieces.
 
 ### Map — Nearby signals sheet (`apps/client`)
 
-- **`apps/client/src/components/Map/ReconstructCapsule.jsx`** + **`.css`** — When the map viewport is **zoomed in** (zoom ≥ **`RECON_MIN_ZOOM`** = 9) and **scraped** reports (**Reddit** / **Google News** via backend scraper) fall within **`RECON_PROXIMITY_KM`** (30 km) of the map center, a **Nearby signals** control appears above the nav bar. It opens a sheet with a **combined digest** of summaries plus **per-item cards** (posted age, summary, expandable **original scraped text**). Data is refreshed from **`GET /api/reports`** when the sheet opens so descriptions stay consistent with MongoDB. **Map pins** show a **hover popup** (source + posted time + preview) via **`MapView.jsx`** / **`MapView.css`**.
-- **`apps/client/src/recon/reconManager.js`** — Centralizes proximity filter, sort-by-distance, digest text, **relative post age** (`formatReportAge`), source labels, and the **`reconManager`** namespace export for reuse/tests.
-- **`apps/client/src/store/mapSlice.js`** — Stores **`lng` / `lat` / `zoom`** from Mapbox (`moveend` / `zoomend`, throttled); **`apps/client/src/components/Map/MapView.jsx`** keeps it in sync for proximity checks.
+- **`apps/client/src/components/Map/ReconstructCapsule.jsx`** + **`.css`** — **Nearby signals** sheet opens when the user **taps the heatmap, a pin, or within ~28 km of an actionable scraped pin** (see **`MapView`**). No bottom FAB. Sheet lists **Reddit** / **Google News** items within **`RECON_PROXIMITY_KM`** (30 km) of map center (digest, cards, posted age, expandable text); **`GET /api/reports`** refreshes when opened. **`reportLooksLikeBroadEditorialOrAnalysis`** drops op-eds / “no specific location” items from the list. **Pins** still use **hover popups** in **`MapView.jsx`** / **`MapView.css`**.
+- **`apps/client/src/recon/reconManager.js`** — Proximity filter, editorial screen, sort-by-distance, digest, **`formatReportAge`**, source labels, **`reconManager`** namespace.
+- **`apps/client/src/store/mapSlice.js`** — **`lng` / `lat` / `zoom`**, plus **`nearbySignalsSheetOpen`** / **`setNearbySignalsSheetOpen`** for sheet visibility.
+- **`apps/client/src/components/Map/MapView.jsx`** — Viewport sync; **`click`** opens the sheet via **`setNearbySignalsSheetOpen(true)`** when the click hits pins, heat (if queryable), or is near actionable scraped coordinates.
 
 ---
 
