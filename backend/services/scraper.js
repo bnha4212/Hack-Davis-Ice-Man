@@ -6,22 +6,30 @@ const { parseLocationFromText } = require('./claude');
 const rssParser = new Parser();
 
 function buildPinPayload(reportDoc) {
+  const desc = reportDoc.description || '';
   return {
+    id: reportDoc._id.toString(),
     lat: reportDoc.lat,
     lng: reportDoc.lng,
     source: reportDoc.source,
     summary: reportDoc.summary,
+    preview: desc.length > 320 ? `${desc.slice(0, 317)}…` : desc,
     timestamp: reportDoc.createdAt.toISOString(),
   };
 }
 
+/** Queries biased toward enforcement actions (raids, arrests, detentions), not general ICE policy news. */
 const SEARCH_TERMS = [
   'ICE raid',
-  'immigration checkpoint',
-  'deportation',
-  'redada de ICE',
-  'migra',
-  'control migratorio',
+  'ICE immigration raid',
+  'ICE arrests',
+  'ICE detained',
+  'ICE detention',
+  'immigration raid ICE',
+  'ICE enforcement arrest',
+  'redada ICE',
+  'ICE sweep',
+  'ICE taken into custody',
 ];
 
 const REDDIT_HEADERS = {
@@ -41,6 +49,34 @@ function textMentionsIceAgency(text) {
   if (/\bICE\b/i.test(s)) return true;
   if (/I\s*\.\s*C\s*\.\s*E\b/i.test(s)) return true;
   return false;
+}
+
+/**
+ * Keep items that look like raids / arrests / detentions — not generic ICE or immigration news.
+ * Requires ICE agency mention plus raid-like or detention-like language.
+ */
+function textIsRaidOrDetentionSignal(text) {
+  if (!textMentionsIceAgency(text)) return false;
+  const t = text;
+  const raidLike =
+    /\braid(s|ed|ing)?\b/i.test(t) ||
+    /\bredad(a|as)\b/i.test(t) ||
+    /\braiding\b/i.test(t);
+  const detainLike =
+    /\barrest(s|ed|ing)?\b/i.test(t) ||
+    /\bdetain(s|ed|ing|ees?|ment)?\b/i.test(t) ||
+    /\bdetenci[oó]n\b/i.test(t) ||
+    /\bapprehend(ed|s|ing)?\b/i.test(t) ||
+    /\btaken\s+into\s+custody\b/i.test(t) ||
+    /\bin\s+custody\b.*\b(ice|immigration)\b/i.test(t) ||
+    /\b(ice|immigration)\b.*\bin\s+custody\b/i.test(t);
+  const sweepLike = /\bsweep(s|ing)?\b/i.test(t) && textMentionsIceAgency(t);
+  const checkpointEnforcement =
+    /\bcheckpoint\b/i.test(t) &&
+    textMentionsIceAgency(t) &&
+    /\b(raid|arrest|detain|custody|enforcement|operation)\b/i.test(t);
+
+  return raidLike || detainLike || sweepLike || checkpointEnforcement;
 }
 
 async function fetchRedditForTerm(term) {
@@ -108,7 +144,7 @@ async function processScrapedItem(item, io) {
   const text = `${item.title}\n\n${item.body}`.trim();
   if (text.length < 20) return;
 
-  if (!textMentionsIceAgency(text)) {
+  if (!textIsRaidOrDetentionSignal(text)) {
     return;
   }
 
@@ -153,12 +189,12 @@ async function runScrapeCycle(io) {
     return;
   }
 
-  const beforeIceFilter = items.length;
+  const beforeFilter = items.length;
   items = items.filter((item) =>
-    textMentionsIceAgency(`${item.title}\n${item.body}`)
+    textIsRaidOrDetentionSignal(`${item.title}\n${item.body}`)
   );
   console.log(
-    `[scraper] ICE mention filter: ${beforeIceFilter} -> ${items.length} items (require #ICE, word ICE, or I.C.E.)`
+    `[scraper] Raid/detention + ICE filter: ${beforeFilter} -> ${items.length} items`
   );
 
   const slice = items.slice(0, MAX_ITEMS_PER_RUN);
@@ -200,4 +236,5 @@ module.exports = {
   runScrapeCycle,
   SEARCH_TERMS,
   textMentionsIceAgency,
+  textIsRaidOrDetentionSignal,
 };

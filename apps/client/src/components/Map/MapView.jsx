@@ -4,21 +4,53 @@ import { useAppSelector, useAppDispatch } from '../../store'
 import { setPins } from '../../store/pinsSlice'
 import { setViewport } from '../../store/mapSlice'
 import { fetchReports } from '../../services/api'
+import { formatReportAge, sourceLabel } from '../../recon/reconManager'
+import './MapView.css'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
+
+function escapeHtml(s) {
+  if (s == null) return ''
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function pinCreatedIso(pin) {
+  if (pin.createdAt) {
+    if (typeof pin.createdAt === 'string') return pin.createdAt
+    try {
+      return new Date(pin.createdAt).toISOString()
+    } catch {
+      return ''
+    }
+  }
+  return pin.timestamp || ''
+}
 
 function pinsToGeoJSON(pins) {
   return {
     type: 'FeatureCollection',
-    features: pins.map((pin) => ({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [pin.lng, pin.lat] },
-      properties: {
-        score: pin.score ?? 1,
-        source: pin.source ?? 'news',
-        id: pin.id ?? '',
-      },
-    })),
+    features: pins.map((pin) => {
+      const desc = pin.description ?? ''
+      const preview =
+        pin.preview ??
+        (desc.length > 320 ? `${desc.slice(0, 317)}…` : desc)
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [pin.lng, pin.lat] },
+        properties: {
+          score: pin.score ?? 1,
+          source: pin.source ?? 'news',
+          id: pin.id ?? '',
+          summary: pin.summary ?? '',
+          preview,
+          createdAt: pinCreatedIso(pin),
+        },
+      }
+    }),
   }
 }
 
@@ -107,6 +139,44 @@ export default function MapView() {
             14, 1,
           ],
         },
+      })
+
+      const pinPopup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 14,
+        className: 'map-pin-popup-root',
+        maxWidth: '320px',
+      })
+
+      const showPinPopup = (feature, lngLat) => {
+        const p = feature.properties || {}
+        const src = escapeHtml(sourceLabel(p.source))
+        const body = escapeHtml((p.summary || p.preview || '').trim() || 'No preview')
+        const ageIso = p.createdAt
+        const ageLabel = ageIso ? formatReportAge(ageIso) : ''
+        const ageBlock = ageLabel
+          ? `<div class="map-pin-popup__age">Posted ${escapeHtml(ageLabel)}</div>`
+          : ''
+        pinPopup
+          .setLngLat(lngLat)
+          .setHTML(
+            `<div class="map-pin-popup"><div class="map-pin-popup__source">Source · ${src}</div>${ageBlock}<div class="map-pin-popup__text">${body}</div></div>`
+          )
+          .addTo(map)
+      }
+
+      map.on('mouseenter', 'reports-pins', () => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+      map.on('mousemove', 'reports-pins', (e) => {
+        const f = e.features?.[0]
+        if (!f) return
+        showPinPopup(f, e.lngLat)
+      })
+      map.on('mouseleave', 'reports-pins', () => {
+        map.getCanvas().style.cursor = ''
+        pinPopup.remove()
       })
 
       fetchReports()

@@ -4,11 +4,14 @@ const Report = require('../models/Report');
 const router = express.Router();
 
 function buildPinPayload(reportDoc) {
+  const desc = reportDoc.description || '';
   return {
+    id: reportDoc._id.toString(),
     lat: reportDoc.lat,
     lng: reportDoc.lng,
     source: reportDoc.source,
     summary: reportDoc.summary,
+    preview: desc.length > 320 ? `${desc.slice(0, 317)}…` : desc,
     timestamp: reportDoc.createdAt.toISOString(),
   };
 }

@@ -1,0 +1,41 @@
+.map-pin-popup-root .mapboxgl-popup-content {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.map-pin-popup-root .mapboxgl-popup-tip {
+  border-top-color: #1a1f2e;
+}
+
+.map-pin-popup {
+  min-width: 200px;
+  max-width: min(320px, 85vw);
+  padding: 12px 14px;
+  background: #1a1f2e;
+  color: #e2e4ea;
+  border-radius: 10px;
+  border: 1px solid #2e3347;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.map-pin-popup__source {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #7eb3f5;
+  margin-bottom: 6px;
+}
+
+.map-pin-popup__age {
+  font-size: 11px;
+  color: #8b91a3;
+  margin-bottom: 8px;
+}
+
+.map-pin-popup__text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #d8dce8;
+}
