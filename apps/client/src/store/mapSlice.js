@@ -5,6 +5,8 @@ const initialState = {
   lng: -121.74,
   lat: 38.54,
   zoom: 10,
+  /** Opened by tapping heatmap / pins — Nearby signals sheet */
+  nearbySignalsSheetOpen: false,
 }
 
 const mapSlice = createSlice({
@@ -17,8 +19,11 @@ const mapSlice = createSlice({
       if (Number.isFinite(lat)) state.lat = lat
       if (Number.isFinite(zoom)) state.zoom = zoom
     },
+    setNearbySignalsSheetOpen(state, action) {
+      state.nearbySignalsSheetOpen = Boolean(action.payload)
+    },
   },
 })
 
-export const { setViewport } = mapSlice.actions
+export const { setViewport, setNearbySignalsSheetOpen } = mapSlice.actions
 export default mapSlice.reducer
