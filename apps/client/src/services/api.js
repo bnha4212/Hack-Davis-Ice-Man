@@ -1,4 +1,4 @@
-import { SERVER_URL, API_ROUTES } from '@iceman/shared'
+import { SERVER_URL, API_ROUTES } from '@warrant/shared'
 
 export async function sendPanicAudio(audioBlob, contacts) {
   const formData = new FormData()

@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client'
-import { SERVER_URL } from '@iceman/shared'
+import { SERVER_URL } from '@warrant/shared'
 
 const socket = io(SERVER_URL, { autoConnect: false })
 

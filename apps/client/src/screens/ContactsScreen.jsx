@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import NavBar from '../components/UI/NavBar'
-import { SERVER_URL } from '@iceman/shared'
+import { SERVER_URL } from '@warrant/shared'
 
 const ROLE_STYLES = {
   Lawyer: { bg: '#1d3a5c', color: '#7eb3f5', avatarBg: '#1d3a5c' },
@@ -14,7 +14,7 @@ function initials(name) {
 
 export default function ContactsScreen({ activeScreen, onNavigate }) {
   const [contacts, setContacts] = useState(() =>
-    JSON.parse(localStorage.getItem('iceman_contacts') || '[]')
+    JSON.parse(localStorage.getItem('warrant_contacts') || '[]')
   )
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', phone: '', role: 'Family' })
@@ -22,7 +22,7 @@ export default function ContactsScreen({ activeScreen, onNavigate }) {
 
   const save = (updated) => {
     setContacts(updated)
-    localStorage.setItem('iceman_contacts', JSON.stringify(updated))
+    localStorage.setItem('warrant_contacts', JSON.stringify(updated))
   }
 
   const addContact = () => {
@@ -211,7 +211,7 @@ export default function ContactsScreen({ activeScreen, onNavigate }) {
         }}>
           <p style={{ fontSize: 11, color: '#5a5f70', marginBottom: 6, fontWeight: 600, letterSpacing: '0.05em' }}>SMS PREVIEW</p>
           <p style={{ fontSize: 13, color: '#9ca3af', lineHeight: 1.5 }}>
-            "ICEMAN ALERT — I may need help. [location]. Sent via Iceman app."
+            "WARRANT ALERT — I may need help. [location]. Sent via Warrant app."
           </p>
           <button
             onClick={sendTestSMS}

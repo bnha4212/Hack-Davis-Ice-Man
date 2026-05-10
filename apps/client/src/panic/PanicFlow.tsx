@@ -342,7 +342,7 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
       aria-labelledby="panic-title"
     >
       <h1 id="panic-title" className="panic__title">
-        IceMan
+        Warrant
       </h1>
       <p id="panic-hold-help" className="panic__lede">
         Demo panic flow: hold to record → transcript → confirm → bilingual

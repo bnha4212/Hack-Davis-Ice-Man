@@ -1,5 +1,5 @@
 {
-  "name": "iceman",
+  "name": "warrant",
   "private": true,
   "workspaces": ["apps/client", "apps/server", "packages/shared"],
   "scripts": {

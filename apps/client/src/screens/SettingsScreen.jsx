@@ -78,10 +78,10 @@ export default function SettingsScreen({ activeScreen, onNavigate }) {
     localStorage.clear()
     dispatch(setPins([]))
     dispatch(reset())
-    if (window.indexedDB) indexedDB.deleteDatabase('iceman')
+    if (window.indexedDB) indexedDB.deleteDatabase('warrant')
   }
 
-  const profile = JSON.parse(localStorage.getItem('iceman_profile') || '{"name":"You","city":"Davis, CA"}')
+  const profile = JSON.parse(localStorage.getItem('warrant_profile') || '{"name":"You","city":"Davis, CA"}')
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0f1117' }}>
@@ -203,7 +203,7 @@ export default function SettingsScreen({ activeScreen, onNavigate }) {
 
         {/* Version */}
         <p style={{ textAlign: 'center', fontSize: 12, color: '#5a5f70' }}>
-          Iceman v1.0.0 — HackDavis 2026
+          Warrant v1.0.0 — HackDavis 2026
         </p>
       </div>
 

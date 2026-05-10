@@ -1,4 +1,4 @@
-const DB_NAME = 'iceman'
+const DB_NAME = 'warrant'
 const DB_VERSION = 1
 
 function openDB() {

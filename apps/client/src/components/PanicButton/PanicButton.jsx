@@ -14,7 +14,7 @@ export default function PanicButton({ lang }) {
   const [processingReady, setProcessingReady] = useState(false)
   const pendingResponse = useRef(null)
 
-  const contacts = JSON.parse(localStorage.getItem('iceman_contacts') || '[]')
+  const contacts = JSON.parse(localStorage.getItem('warrant_contacts') || '[]')
 
   useEffect(() => {
     if (!audioBlob) return

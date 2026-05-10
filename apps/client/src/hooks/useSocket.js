@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import socket from '../services/socket'
 import { useAppDispatch } from '../store'
 import { addPin, setConnected } from '../store/pinsSlice'
-import { EVENTS } from '@iceman/shared'
+import { EVENTS } from '@warrant/shared'
 
 export function useSocket() {
   const dispatch = useAppDispatch()

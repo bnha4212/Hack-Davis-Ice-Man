@@ -1,4 +1,4 @@
-import { API_ROUTES, SERVER_URL } from '@iceman/shared'
+import { API_ROUTES, SERVER_URL } from '@warrant/shared'
 
 /**
  * Panic pipeline adapters — swap implementations without changing the UI.
@@ -145,7 +145,7 @@ export async function mockSendPanicSms(payload: PanicSmsPayload): Promise<void> 
 }
 
 const contacts = () =>
-  JSON.parse(localStorage.getItem('iceman_contacts') || '[]')
+  JSON.parse(localStorage.getItem('warrant_contacts') || '[]')
 
 /** Default: real Whisper + Claude + Twilio via backend. */
 export const defaultPanicServices: PanicServices = {

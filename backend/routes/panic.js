@@ -53,8 +53,8 @@ async function sendSMSToContacts(contacts, transcript, responseEn) {
   if (!key || !contacts.length) return
 
   const message = transcript
-    ? `ICEMAN ALERT: "${transcript.slice(0, 120)}" — ${responseEn.slice(0, 100)}`
-    : responseEn || 'ICEMAN ALERT — someone in your network may need help.'
+    ? `WARRANT ALERT: "${transcript.slice(0, 120)}" — ${responseEn.slice(0, 100)}`
+    : responseEn || 'WARRANT ALERT — someone in your network may need help.'
 
   await Promise.all(
     contacts.map(async (c) => {
@@ -135,7 +135,7 @@ router.post('/confirm', express.json(), async (req, res) => {
 router.post('/sms', express.json(), async (req, res) => {
   try {
     const { contacts, message } = req.body
-    const text = message || 'ICEMAN ALERT — someone in your network may need help.'
+    const text = message || 'WARRANT ALERT — someone in your network may need help.'
     await sendSMSToContacts(contacts || [], text, '')
     res.json({ ok: true })
   } catch (err) {
