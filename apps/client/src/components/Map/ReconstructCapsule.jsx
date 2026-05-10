@@ -1,39 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAppSelector } from '../../store'
 import { fetchReports } from '../../services/api'
-import { haversineKm } from '../../utils/geo'
+import {
+  RECON_MIN_ZOOM,
+  RECON_PROXIMITY_KM,
+  buildDigest,
+  distanceFromCenter,
+  filterNearbyScraped,
+  formatReportAge,
+  reportKey,
+  sortByDistance,
+  sourceLabel,
+} from '../../recon/reconManager'
 import './ReconstructCapsule.css'
-
-const PROXIMITY_KM = 30
-const MIN_ZOOM = 9
-
-const SCRAPED = new Set(['reddit', 'news'])
-
-function filterNearbyScraped(reports, center, maxKm) {
-  return reports.filter((r) => {
-    if (!SCRAPED.has(r.source)) return false
-    if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return false
-    return haversineKm(center.lat, center.lng, r.lat, r.lng) <= maxKm
-  })
-}
-
-function sortByDistance(reports, center) {
-  return [...reports].sort(
-    (a, b) =>
-      haversineKm(center.lat, center.lng, a.lat, a.lng) -
-      haversineKm(center.lat, center.lng, b.lat, b.lng)
-  )
-}
-
-function reportKey(r) {
-  return r.id || `${r.lat}-${r.lng}-${r.source}-${r.createdAt || ''}`
-}
-
-function sourceLabel(source) {
-  if (source === 'reddit') return 'Reddit'
-  if (source === 'news') return 'News'
-  return source
-}
 
 export default function ReconstructCapsule() {
   const { lng, lat, zoom } = useAppSelector((s) => s.map)
@@ -45,11 +24,11 @@ export default function ReconstructCapsule() {
   const [loading, setLoading] = useState(false)
 
   const nearbyFromPins = useMemo(
-    () => sortByDistance(filterNearbyScraped(pins, center, PROXIMITY_KM), center),
+    () => sortByDistance(filterNearbyScraped(pins, center, RECON_PROXIMITY_KM), center),
     [pins, center.lng, center.lat]
   )
 
-  const showEntry = zoom >= MIN_ZOOM && nearbyFromPins.length > 0
+  const showEntry = zoom >= RECON_MIN_ZOOM && nearbyFromPins.length > 0
 
   useEffect(() => {
     if (!open) return
@@ -58,7 +37,7 @@ export default function ReconstructCapsule() {
     fetchReports()
       .then((data) => {
         if (cancelled) return
-        const sorted = sortByDistance(filterNearbyScraped(data, center, PROXIMITY_KM), center)
+        const sorted = sortByDistance(filterNearbyScraped(data, center, RECON_PROXIMITY_KM), center)
         setPanelReports(sorted)
       })
       .catch(() => {
@@ -74,14 +53,7 @@ export default function ReconstructCapsule() {
 
   const displayList = panelReports.length > 0 ? panelReports : nearbyFromPins
 
-  const digest = useMemo(() => {
-    const summaries = [
-      ...new Set(displayList.map((r) => (r.summary || '').trim()).filter(Boolean)),
-    ]
-    const text = summaries.slice(0, 8).join(' · ')
-    if (text.length <= 420) return text
-    return `${text.slice(0, 417)}…`
-  }, [displayList])
+  const digest = useMemo(() => buildDigest(displayList), [displayList])
 
   if (!showEntry && !open) return null
 
@@ -95,12 +67,13 @@ export default function ReconstructCapsule() {
             onClick={() => setOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={open}
+            aria-label="Open nearby raid and detention signals from Reddit and news"
           >
             <i className="ti ti-radar-2" aria-hidden />
-            Reconstruct
+            Nearby signals
           </button>
           <p className="reconstruct-hint">
-            Near activity heat — open for scraped social posts & news digest
+            Near hot spots — Reddit & news on raids and detentions
           </p>
         </div>
       )}
@@ -115,14 +88,15 @@ export default function ReconstructCapsule() {
             className="reconstruct-sheet"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="reconstruct-title"
+            aria-labelledby="nearby-signals-title"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="reconstruct-sheet-head">
               <div>
-                <h2 id="reconstruct-title">Reconstruct</h2>
+                <h2 id="nearby-signals-title">Nearby signals</h2>
                 <p className="reconstruct-sub">
-                  Signals from Reddit & Google News near your map view (~{PROXIMITY_KM} km)
+                  Reddit & Google News (raids / detentions) within ~{RECON_PROXIMITY_KM} km of your
+                  view
                 </p>
               </div>
               <button
@@ -156,9 +130,14 @@ export default function ReconstructCapsule() {
                       {sourceLabel(r.source)}
                     </span>
                     <span className="reconstruct-dist">
-                      {haversineKm(center.lat, center.lng, r.lat, r.lng).toFixed(1)} km
+                      {distanceFromCenter(r, center).toFixed(1)} km
                     </span>
                   </div>
+                  {(r.createdAt || r.timestamp) && (
+                    <p className="reconstruct-age">
+                      Posted {formatReportAge(r.createdAt || r.timestamp)}
+                    </p>
+                  )}
                   <p className="reconstruct-summary">{r.summary}</p>
                   {r.description ? (
                     <details className="reconstruct-details">

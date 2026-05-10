@@ -6,8 +6,8 @@
 
 ## 1. Project overview
 
-- **Stack**: Vite + React + TypeScript (frontend).
-- **Name**: `safeguard-panic` (npm / app name); GitHub repo is **Hack-Davis-Ice-Man** (see §4).
+- **Stack**: Vite + React in **`apps/client`** (mixed **TypeScript** — `panic/` — and **JavaScript** — screens, map, UI).
+- **Name**: Root npm workspace is **`iceman`** (`@iceman/client`); GitHub repo is **Hack-Davis-Ice-Man** (see section 4).
 - **Goal**: Panic-button **demo** for **Hack Davis** — SafeGuard flow in the browser.
 - **Main feature** (end-to-end story):
   1. **Hold-to-record** audio (mic).
@@ -22,9 +22,9 @@
 
 ### Panic UI (primary demo surface)
 
-- **`src/panic/PanicFlow.tsx`** — UI + phase state machine + recording.
-- **`src/panic/PanicFlow.css`** — panic layout and state styling.
-- **`src/panic/panicServices.ts`** — **`PanicServices`** adapters + **mock** implementations (TODOs for real Whisper / Claude / Twilio).
+- **`apps/client/src/panic/PanicFlow.tsx`** — UI + phase state machine + recording.
+- **`apps/client/src/panic/PanicFlow.css`** — panic layout and state styling.
+- **`apps/client/src/panic/panicServices.ts`** — **`PanicServices`** adapters + **mock** implementations (TODOs for real Whisper / Claude / Twilio).
 
 **Phases:** `idle` → `recording` → `transcribing` → `confirming` → `responding` → `sent`; `error` ends in a resettable state (**Try again** clears session).
 
@@ -36,12 +36,13 @@
 
 ### Backend (from merged remote)
 
-- **`backend/`** — Express-style API, models, routes, `services/claude.js`, `services/scraper.js`, etc. Treat as the integration home for server-side keys and Twilio later.
+- **`backend/`** — Express-style API, models, routes, `services/claude.js`, `services/scraper.js`, etc. Treat as the integration home for server-side keys and Twilio later. The **scraper** search terms target **ICE raids / arrests / detentions** (not generic ICE policy news); items must pass **`textIsRaidOrDetentionSignal`** (ICE mention + raid- or detention-like language) before Claude geocoding.
 
-### Map — Reconstruct capsule (`apps/client`)
+### Map — Nearby signals sheet (`apps/client`)
 
-- **`ReconstructCapsule.jsx`** + **`ReconstructCapsule.css`** — When the map viewport is **zoomed in** (zoom ≥ 9) and **scraped** reports (**Reddit** / **Google News** via backend scraper) fall within **~30 km** of the map center, a **Reconstruct** control appears above the nav bar. It opens a sheet with a **combined digest** of Claude summaries plus **per-item cards** (summary + expandable **original scraped text**). Data is refreshed from **`GET /api/reports`** when the sheet opens so descriptions stay consistent with MongoDB.
-- **`mapSlice`** — Stores **`lng` / `lat` / `zoom`** from Mapbox (`moveend` / `zoomend`, throttled); **`MapView.jsx`** keeps it in sync for proximity checks.
+- **`apps/client/src/components/Map/ReconstructCapsule.jsx`** + **`.css`** — When the map viewport is **zoomed in** (zoom ≥ **`RECON_MIN_ZOOM`** = 9) and **scraped** reports (**Reddit** / **Google News** via backend scraper) fall within **`RECON_PROXIMITY_KM`** (30 km) of the map center, a **Nearby signals** control appears above the nav bar. It opens a sheet with a **combined digest** of summaries plus **per-item cards** (posted age, summary, expandable **original scraped text**). Data is refreshed from **`GET /api/reports`** when the sheet opens so descriptions stay consistent with MongoDB. **Map pins** show a **hover popup** (source + posted time + preview) via **`MapView.jsx`** / **`MapView.css`**.
+- **`apps/client/src/recon/reconManager.js`** — Centralizes proximity filter, sort-by-distance, digest text, **relative post age** (`formatReportAge`), source labels, and the **`reconManager`** namespace export for reuse/tests.
+- **`apps/client/src/store/mapSlice.js`** — Stores **`lng` / `lat` / `zoom`** from Mapbox (`moveend` / `zoomend`, throttled); **`apps/client/src/components/Map/MapView.jsx`** keeps it in sync for proximity checks.
 
 ---
 
@@ -75,5 +76,5 @@
 1. **`git fetch origin`** / **`git status`** — confirm `main` matches `origin/main` when starting work.
 2. **Stash** — if you use `git stash` for panic WIP, **`git stash apply`** or **`pop`** after pulling; resolve conflicts only in touched files.
 3. **Manual QA** — `npm run dev`, full panic flow (mic, short hold, confirm, sent, error + Try again).
-4. **Integrations** — replace mocks in `panicServices.ts`; use **`backend/`** (or a new API) for secrets, Whisper, Claude, Twilio.
+4. **Integrations** — replace mocks in **`apps/client/src/panic/panicServices.ts`**; use **`backend/`** (or a new API) for secrets, Whisper, Claude, Twilio.
 5. **Optional** — add `CAPSULES.md` / remote URL tweaks to README for new contributors.
