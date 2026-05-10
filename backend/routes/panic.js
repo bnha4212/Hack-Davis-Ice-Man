@@ -1,8 +1,7 @@
 const express = require('express')
 const multer = require('multer')
-const { Readable } = require('stream')
+const axios = require('axios')
 const OpenAI = require('openai')
-const twilio = require('twilio')
 const Anthropic = require('@anthropic-ai/sdk')
 
 const router = express.Router()
@@ -14,12 +13,6 @@ function getOpenAI() {
   return new OpenAI({ apiKey })
 }
 
-function getTwilio() {
-  const sid = (process.env.TWILIO_ACCOUNT_SID || '').trim()
-  const token = (process.env.TWILIO_AUTH_TOKEN || '').trim()
-  if (!sid || !token) throw new Error('Twilio credentials not set')
-  return twilio(sid, token)
-}
 
 function getAnthropic() {
   const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim()
@@ -56,16 +49,30 @@ async function generateBilingualResponse(transcript) {
 }
 
 async function sendSMSToContacts(contacts, transcript, responseEn) {
-  const from = (process.env.TWILIO_PHONE_NUMBER || '').trim()
-  if (!from || !contacts.length) return
+  const key = (process.env.TEXTBELT_KEY || '').trim()
+  if (!key || !contacts.length) return
 
-  const client = getTwilio()
-  const body = `ICEMAN ALERT: "${transcript.slice(0, 120)}..." — ${responseEn.slice(0, 100)}`
+  const message = transcript
+    ? `ICEMAN ALERT: "${transcript.slice(0, 120)}" — ${responseEn.slice(0, 100)}`
+    : responseEn || 'ICEMAN ALERT — someone in your network may need help.'
 
-  await Promise.allSettled(
-    contacts.map((c) =>
-      client.messages.create({ to: c.phone, from, body })
-    )
+  await Promise.all(
+    contacts.map(async (c) => {
+      try {
+        const { data } = await axios.post('https://textbelt.com/text', {
+          phone: c.phone,
+          message,
+          key,
+        })
+        if (data.success) {
+          console.log(`[panic] SMS to ${c.phone} sent (quota remaining: ${data.quotaRemaining})`)
+        } else {
+          console.error(`[panic] SMS to ${c.phone} failed:`, data.error)
+        }
+      } catch (err) {
+        console.error(`[panic] SMS to ${c.phone} error:`, err.message)
+      }
+    })
   )
 }
 
