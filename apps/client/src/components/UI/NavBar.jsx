@@ -1,7 +1,7 @@
 const tabs = [
-  { key: 'home', label: 'Home', icon: 'ti-home' },
   { key: 'map', label: 'Map', icon: 'ti-map-2' },
   { key: 'rights', label: 'Rights', icon: 'ti-shield' },
+  { key: 'panic', label: 'Panic', icon: 'ti-alert-triangle' },
   { key: 'contacts', label: 'Contacts', icon: 'ti-users' },
   { key: 'settings', label: 'Settings', icon: 'ti-settings' },
 ]
