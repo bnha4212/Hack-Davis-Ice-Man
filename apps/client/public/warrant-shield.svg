@@ -1,0 +1,19 @@
+<svg width="100%" viewBox="0 0 680 680" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Warrant shield</title>
+  <!-- Outer shield -->
+  <path d="M340 80
+           L520 160
+           L520 420
+           Q520 580 340 620
+           Q160 580 160 420
+           L160 160 Z" fill="none" stroke="white" stroke-width="8" stroke-linejoin="round"/>
+  <!-- Inner shield detail -->
+  <path d="M340 118
+           L488 188
+           L488 420
+           Q488 554 340 588
+           Q192 554 192 420
+           L192 188 Z" fill="none" stroke="white" stroke-width="2.5" stroke-linejoin="round" opacity="0.4"/>
+  <!-- Sharp thick W -->
+  <path d="M224 280 L286 470 L340 340 L394 470 L456 280" fill="none" stroke="white" stroke-width="18" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="10"/>
+</svg>

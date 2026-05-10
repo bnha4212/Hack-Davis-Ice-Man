@@ -23,6 +23,29 @@
   text-align: center;
 }
 
+.panic__brand {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+
+.panic__logo {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.panic__wordmark {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-h);
+}
+
 .panic__title {
   font-size: clamp(28px, 6vw, 40px);
   letter-spacing: -0.04em;

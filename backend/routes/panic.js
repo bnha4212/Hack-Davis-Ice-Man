@@ -53,8 +53,8 @@ async function sendSMSToContacts(contacts, transcript, responseEn) {
   if (!key || !contacts.length) return
 
   const message = transcript
-    ? `WARRANT ALERT: "${transcript.slice(0, 120)}" — ${responseEn.slice(0, 100)}`
-    : responseEn || 'WARRANT ALERT — someone in your network may need help.'
+    ? `WARRANT ALERT: "${transcript.slice(0, 200)}"`
+    : 'WARRANT ALERT — someone in your network may need help.'
 
   await Promise.all(
     contacts.map(async (c) => {

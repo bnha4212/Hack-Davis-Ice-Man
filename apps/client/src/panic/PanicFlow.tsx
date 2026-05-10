@@ -330,6 +330,15 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
 
   return (
     <div className="panic" role="region" aria-label="Panic alert">
+      <div className="panic__brand">
+        <img
+          src="/warrant-shield.svg"
+          alt=""
+          className="panic__logo"
+          aria-hidden="true"
+        />
+        <span className="panic__wordmark">Warrant</span>
+      </div>
 
       {/* Status strip — hidden in idle so the button is the hero */}
       {phase !== "idle" && (
@@ -411,7 +420,10 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
       )}
 
       {phase === "transcribing" && (
-        <section className="panic__panel panic__panel--progress" aria-live="polite">
+        <section
+          className="panic__panel panic__panel--progress"
+          aria-live="polite"
+        >
           <h2 className="panic__panel-title">Transcribing your message</h2>
           <p className="panic__panel-desc">Converting your audio to text…</p>
         </section>
@@ -466,7 +478,10 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
       )}
 
       {phase === "responding" && (
-        <section className="panic__panel panic__panel--progress" aria-live="polite">
+        <section
+          className="panic__panel panic__panel--progress"
+          aria-live="polite"
+        >
           <h2 className="panic__panel-title">Sending alert</h2>
           <p className="panic__panel-desc">
             Notifying your emergency contacts now…
