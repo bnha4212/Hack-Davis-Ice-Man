@@ -2,9 +2,15 @@ import { useEffect, useRef } from 'react'
 import mapboxgl from 'mapbox-gl'
 import { useAppSelector, useAppDispatch } from '../../store'
 import { setPins } from '../../store/pinsSlice'
-import { setViewport } from '../../store/mapSlice'
+import { setNearbySignalsSheetOpen, setViewport } from '../../store/mapSlice'
 import { fetchReports } from '../../services/api'
-import { formatReportAge, sourceLabel } from '../../recon/reconManager'
+import {
+  formatReportAge,
+  isScrapedSource,
+  reportLooksLikeBroadEditorialOrAnalysis,
+  sourceLabel,
+} from '../../recon/reconManager'
+import { haversineKm } from '../../utils/geo'
 import './MapView.css'
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN
@@ -31,9 +37,13 @@ function pinCreatedIso(pin) {
 }
 
 function pinsToGeoJSON(pins) {
+  const visible = pins.filter((pin) => {
+    if (!isScrapedSource(pin.source)) return true
+    return !reportLooksLikeBroadEditorialOrAnalysis(pin)
+  })
   return {
     type: 'FeatureCollection',
-    features: pins.map((pin) => {
+    features: visible.map((pin) => {
       const desc = pin.description ?? ''
       const preview =
         pin.preview ??
@@ -59,11 +69,28 @@ function viewportFromMap(map) {
   return { lng: c.lng, lat: c.lat, zoom: map.getZoom() }
 }
 
+/** Heatmaps often do not return features from queryRenderedFeatures; use distance to scraped pins. */
+const HEAT_CLICK_MAX_KM = 28
+
+function nearestActionableScrapedKm(lngLat, pinList) {
+  let min = Infinity
+  for (const p of pinList) {
+    if (!isScrapedSource(p.source)) continue
+    if (reportLooksLikeBroadEditorialOrAnalysis(p)) continue
+    if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue
+    const d = haversineKm(lngLat.lat, lngLat.lng, p.lat, p.lng)
+    if (d < min) min = d
+  }
+  return min === Infinity ? null : min
+}
+
 export default function MapView() {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const dispatch = useAppDispatch()
   const pins = useAppSelector((s) => s.pins.pins)
+  const pinsRef = useRef(pins)
+  pinsRef.current = pins
   const viewportThrottleRef = useRef(0)
 
   useEffect(() => {
@@ -178,6 +205,24 @@ export default function MapView() {
         map.getCanvas().style.cursor = ''
         pinPopup.remove()
       })
+
+      const onMapClickOpenSignals = (e) => {
+        const pinHits = map.queryRenderedFeatures(e.point, { layers: ['reports-pins'] })
+        if (pinHits.length > 0) {
+          dispatch(setNearbySignalsSheetOpen(true))
+          return
+        }
+        const heatHits = map.queryRenderedFeatures(e.point, { layers: ['reports-heatmap'] })
+        if (heatHits.length > 0) {
+          dispatch(setNearbySignalsSheetOpen(true))
+          return
+        }
+        const nearKm = nearestActionableScrapedKm(e.lngLat, pinsRef.current)
+        if (nearKm != null && nearKm <= HEAT_CLICK_MAX_KM) {
+          dispatch(setNearbySignalsSheetOpen(true))
+        }
+      }
+      map.on('click', onMapClickOpenSignals)
 
       fetchReports()
         .then((data) => dispatch(setPins(data)))

@@ -31,16 +31,17 @@ async function parseLocationFromText(text) {
     };
   }
 
-  const systemPrompt = `You extract structured location intelligence from short news or social posts about immigration enforcement (ICE raids, checkpoints, deportations, migra, etc.).
+  const systemPrompt = `You extract structured location intelligence from short news or social posts about discrete immigration enforcement events (a specific ICE raid, arrest, detention, checkpoint, or sweep at a place or neighborhood).
 
 Respond with ONLY a single JSON object, no markdown fences, no extra text. Use this exact shape:
 {"lat": number or null, "lng": number or null, "city": string or null, "neighborhood": string or null, "summary": string, "confidence": number}
 
 Rules:
-- lat/lng: decimal degrees (WGS84) if the text clearly implies a specific place you can infer; otherwise null.
-- If only a city/region is known, approximate a reasonable lat/lng for the city center or affected area; lower confidence if approximate.
-- summary: one or two English sentences, factual, no speculation beyond the text.
-- confidence: 0.0 to 1.0 for how confident you are that the event is real and the location is usable for a map pin.
+- lat/lng: decimal degrees (WGS84) only if the text describes a specific reported enforcement event tied to a mappable place (address, neighborhood, city, venue, workplace). Otherwise null.
+- Do NOT assign coordinates for op-eds, editorials, opinion columns, policy essays, or articles that only discuss statewide/national economic or social impacts without a specific raid or arrest location. For those, set lat/lng null and confidence below 0.3.
+- If only a city/region is known for a real on-the-ground event, approximate city center; lower confidence if approximate.
+- summary: one or two English sentences, factual. If there is no specific location to pin, say so clearly (e.g. that the piece is broad/analysis only).
+- confidence: 0.0 to 1.0 for how confident you are that the event is a real, localized enforcement incident usable for a map pin.
 - If the text is unrelated noise or no location can be inferred, set confidence below 0.4 and lat/lng null.`;
 
   const response = await getClient().messages.create({

@@ -8,8 +8,28 @@ export const RECON_MIN_ZOOM = 9
 
 const SCRAPED_SOURCES = new Set(['reddit', 'news'])
 
+/** Hide op-eds / “no pin” analysis already in DB (matches common Claude disclaimers + bylines). */
+const BROAD_OR_EDITORIAL_MARKERS = [
+  'rather than a specific',
+  'broadly covers',
+  'not a specific city',
+  'no specific city',
+  'no specific location',
+  'op-ed',
+  'op ed',
+  'an op-ed',
+  'editorial',
+  'opinion column',
+  'opinion piece',
+]
+
 export function isScrapedSource(source) {
   return SCRAPED_SOURCES.has(source)
+}
+
+export function reportLooksLikeBroadEditorialOrAnalysis(report) {
+  const blob = `${report.summary || ''}\n${report.description || ''}`.toLowerCase()
+  return BROAD_OR_EDITORIAL_MARKERS.some((m) => blob.includes(m))
 }
 
 /**
@@ -18,6 +38,7 @@ export function isScrapedSource(source) {
 export function filterNearbyScraped(reports, center, maxKm = RECON_PROXIMITY_KM) {
   return reports.filter((r) => {
     if (!isScrapedSource(r.source)) return false
+    if (reportLooksLikeBroadEditorialOrAnalysis(r)) return false
     if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return false
     return haversineKm(center.lat, center.lng, r.lat, r.lng) <= maxKm
   })
@@ -85,6 +106,7 @@ export const reconManager = {
   PROXIMITY_KM: RECON_PROXIMITY_KM,
   MIN_ZOOM: RECON_MIN_ZOOM,
   isScrapedSource,
+  reportLooksLikeBroadEditorialOrAnalysis,
   filterNearbyScraped,
   sortByDistance,
   distanceFromCenter,
