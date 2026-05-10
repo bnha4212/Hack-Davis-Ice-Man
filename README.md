@@ -1,4 +1,4 @@
-# SafeGuard / Hack Davis Ice-Man
+# Warrant
 
 Hackathon project — a **browser-based panic flow** (hold-to-record → transcript → bilingual messaging → SMS-style dispatch) plus a **live Mapbox map** with nearby enforcement-related signals, backed by a **Node.js API** with MongoDB, Socket.IO, and scheduled scraping.
 
