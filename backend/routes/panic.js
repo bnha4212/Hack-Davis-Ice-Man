@@ -31,7 +31,7 @@ async function transcribeAudio(buffer, mimetype) {
   const openai = getOpenAI()
   const ext = mimetype.includes('mp4') ? 'mp4' : 'webm'
   const file = new File([buffer], `audio.${ext}`, { type: mimetype })
-  const result = await openai.audio.transcriptions.create({
+  const result = await openai.audio.translations.create({
     file,
     model: 'whisper-1',
   })
