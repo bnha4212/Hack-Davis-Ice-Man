@@ -24,7 +24,7 @@ async function transcribeAudio(buffer, mimetype) {
   const openai = getOpenAI()
   const ext = mimetype.includes('mp4') ? 'mp4' : 'webm'
   const file = new File([buffer], `audio.${ext}`, { type: mimetype })
-  const result = await openai.audio.translations.create({
+  const result = await openai.audio.transcriptions.create({
     file,
     model: 'whisper-1',
   })
@@ -107,7 +107,7 @@ router.post('/transcribe', upload.single('audio'), async (req, res) => {
     const openai = getOpenAI()
     const ext = req.file.mimetype.includes('mp4') ? 'mp4' : 'webm'
     const file = new File([req.file.buffer], `audio.${ext}`, { type: req.file.mimetype })
-    const result = await openai.audio.translations.create({ file, model: 'whisper-1', response_format: 'verbose_json' })
+    const result = await openai.audio.transcriptions.create({ file, model: 'whisper-1', response_format: 'verbose_json' })
     res.json({ transcript: result.text?.trim() || '', language: result.language || null })
   } catch (err) {
     console.error('[panic/transcribe]', err)

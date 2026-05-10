@@ -22,7 +22,8 @@ export default function HomeScreen({ activeScreen, onNavigate }) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '52px 20px 100px',
+        justifyContent: 'center',
+        padding: '24px 20px 100px',
       }}>
         <PanicFlow />
       </div>

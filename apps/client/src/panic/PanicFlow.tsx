@@ -329,41 +329,34 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
     phase === "recording";
 
   return (
-    <div className="panic" role="region" aria-labelledby="panic-title">
-      <h1 id="panic-title" className="panic__title">
-        Warrant
-      </h1>
-      <p id="panic-hold-help" className="panic__lede">
-        Hold the button and speak. Your message will be transcribed and sent as
-        an alert to all of your emergency contacts.
-      </p>
+    <div className="panic" role="region" aria-label="Panic alert">
 
-      <div
-        className="panic__status"
-        role="status"
-        aria-live="polite"
-        aria-busy={phase === "transcribing" || phase === "responding"}
-        data-phase={phase}
-      >
-        <span className="panic__badge">{stateTitles[phase]}</span>
-        <p className="panic__status-text">{stateHints[phase]}</p>
-        {phase === "recording" && (
-          <p className="panic__timer">
-            {(recordingMs / 1000).toFixed(1)}s · max {HOLD_RING_MS / 1000}s
-          </p>
-        )}
-        {(phase === "transcribing" || phase === "responding") && (
-          <div className="panic__spinner" aria-hidden />
-        )}
-      </div>
+      {/* Status strip — hidden in idle so the button is the hero */}
+      {phase !== "idle" && (
+        <div
+          className="panic__status"
+          role="status"
+          aria-live="polite"
+          aria-busy={phase === "transcribing" || phase === "responding"}
+          data-phase={phase}
+        >
+          <span className="panic__badge">{stateTitles[phase]}</span>
+          <p className="panic__status-text">{stateHints[phase]}</p>
+          {phase === "recording" && (
+            <p className="panic__timer">
+              {(recordingMs / 1000).toFixed(1)}s · max {HOLD_RING_MS / 1000}s
+            </p>
+          )}
+          {(phase === "transcribing" || phase === "responding") && (
+            <div className="panic__spinner" aria-hidden />
+          )}
+        </div>
+      )}
 
       {phase === "error" && error && (
         <div className="panic__notice panic__notice--error" role="alert">
           <strong className="panic__notice-title">Error</strong>
           <p className="panic__notice-body">{error}</p>
-          <p className="panic__notice-foot">
-            Try again clears this session and starts from the beginning.
-          </p>
           <button
             type="button"
             className="panic__btn panic__btn--primary"
@@ -375,60 +368,66 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
       )}
 
       {showHoldButton && (
-        <button
-          ref={holdButtonRef}
-          type="button"
-          className={
-            phase === "recording"
-              ? "panic__hold panic__hold--recording"
-              : "panic__hold"
-          }
-          aria-pressed={phase === "recording"}
-          aria-describedby="panic-hold-help"
-          aria-label={
-            phase === "recording"
-              ? "Recording. Release to stop."
-              : "Hold to record audio"
-          }
-          onPointerDown={onHoldPointerDown}
-          onPointerUp={onHoldPointerEnd}
-          onPointerCancel={onHoldPointerEnd}
-        >
-          {phase === "recording" && (
-            <span
-              className="panic__progress"
-              style={{ ["--hold-deg" as string]: `${holdDeg}deg` }}
-            />
-          )}
-          {phase === "recording" ? "Recording…" : "Hold to record"}
-        </button>
+        <div className="panic__hold-wrap">
+          {phase === "idle" && <span className="panic__ring" aria-hidden />}
+          <button
+            ref={holdButtonRef}
+            type="button"
+            className={
+              phase === "recording"
+                ? "panic__hold panic__hold--recording"
+                : "panic__hold"
+            }
+            aria-pressed={phase === "recording"}
+            aria-label={
+              phase === "recording"
+                ? "Recording. Release to stop."
+                : "Hold to record audio"
+            }
+            onPointerDown={onHoldPointerDown}
+            onPointerUp={onHoldPointerEnd}
+            onPointerCancel={onHoldPointerEnd}
+          >
+            {phase === "recording" && (
+              <span
+                className="panic__progress"
+                style={{ ["--hold-deg" as string]: `${holdDeg}deg` }}
+              />
+            )}
+            {phase === "recording" ? (
+              <i className="ti ti-microphone" style={{ fontSize: 48 }} />
+            ) : (
+              <i className="ti ti-microphone" style={{ fontSize: 48 }} />
+            )}
+          </button>
+        </div>
+      )}
+
+      {phase === "idle" && (
+        <p className="panic__lede" aria-live="polite">
+          Hold the button and speak. Your message will be sent as an alert to
+          all of your emergency contacts.
+        </p>
       )}
 
       {phase === "transcribing" && (
-        <section
-          className="panic__panel panic__panel--progress"
-          aria-live="polite"
-        >
-          <h2 className="panic__panel-title">Transcribing</h2>
-          <p className="panic__panel-desc">
-            Audio is being converted to text via your backend (
-            <strong>OpenAI Whisper</strong>) — see{" "}
-            <code className="panic__code">panicServices.ts</code>.
-          </p>
+        <section className="panic__panel panic__panel--progress" aria-live="polite">
+          <h2 className="panic__panel-title">Transcribing your message</h2>
+          <p className="panic__panel-desc">Converting your audio to text…</p>
         </section>
       )}
 
       {phase === "confirming" && (
         <section className="panic__panel" aria-labelledby="confirm-heading">
           <h2 id="confirm-heading" className="panic__panel-title">
-            Confirm transcript
+            Review your message
           </h2>
           <p className="panic__panel-desc">
-            Edit the text if anything looks wrong, then send the alert.
+            Edit if needed, then confirm to alert your contacts.
           </p>
           {detectedLanguage && (
             <p className="panic__panel-desc panic__panel-desc--muted">
-              Whisper detected language: <strong>{detectedLanguage}</strong>
+              Detected language: <strong>{detectedLanguage}</strong>
             </p>
           )}
           <div className="panic__field">
@@ -460,22 +459,17 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
               onClick={() => void onConfirmSend()}
               disabled={!transcript.trim()}
             >
-              Confirm &amp; send
+              Send alert
             </button>
           </div>
         </section>
       )}
 
       {phase === "responding" && (
-        <section
-          className="panic__panel panic__panel--progress"
-          aria-live="polite"
-        >
+        <section className="panic__panel panic__panel--progress" aria-live="polite">
           <h2 className="panic__panel-title">Sending alert</h2>
           <p className="panic__panel-desc">
-            Composing bilingual copy (→ <strong>Claude</strong> in production)
-            and triggering SMS (→ <strong>Twilio</strong> via your backend).
-            TODOs are in <code className="panic__code">panicServices.ts</code>.
+            Notifying your emergency contacts now…
           </p>
         </section>
       )}
@@ -486,11 +480,10 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
           aria-labelledby="sent-heading"
         >
           <h2 id="sent-heading" className="panic__panel-title">
-            Alert sent (demo)
+            Contacts notified
           </h2>
           <p className="panic__panel-desc">
-            The SMS adapter ran in demo mode. Wire your API + Twilio for real
-            delivery.
+            Your emergency contacts have been alerted.
           </p>
           <div
             className="panic__bilingual"
