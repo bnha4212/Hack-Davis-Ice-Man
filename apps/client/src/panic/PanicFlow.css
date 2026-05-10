@@ -314,6 +314,12 @@
   color: var(--text);
 }
 
+.panic__panel-desc--muted {
+  margin-top: -8px;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
 .panic__panel--success .panic__panel-desc {
   margin-bottom: 18px;
 }

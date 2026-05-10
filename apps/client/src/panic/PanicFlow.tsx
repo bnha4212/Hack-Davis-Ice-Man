@@ -42,6 +42,7 @@ function pickMimeType(): string {
 export function PanicFlow({ services = defaultPanicServices }: Props) {
   const [phase, setPhase] = useState<PanicPhase>('idle')
   const [transcript, setTranscript] = useState('')
+  const [detectedLanguage, setDetectedLanguage] = useState('')
   const [messageEn, setMessageEn] = useState('')
   const [messageEs, setMessageEs] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -109,6 +110,7 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
     chunksRef.current = []
     setRecordingMs(0)
     setTranscript('')
+    setDetectedLanguage('')
     setMessageEn('')
     setMessageEs('')
     setError(null)
@@ -156,8 +158,9 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
       setError(null)
 
       try {
-        const text = await services.transcribeAudio(blob)
-        setTranscript(text)
+        const out = await services.transcribeAudio(blob)
+        setTranscript(out.transcript)
+        setDetectedLanguage(out.language ?? '')
         setPhase('confirming')
       } catch (e) {
         const msg =
@@ -417,9 +420,9 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
         <section className="panic__panel panic__panel--progress" aria-live="polite">
           <h2 className="panic__panel-title">Transcribing</h2>
           <p className="panic__panel-desc">
-            Audio is being converted to text. This step will call{' '}
-            <strong>Whisper</strong> (or your STT API) in production — see TODO
-            in <code className="panic__code">panicServices.ts</code>.
+            Audio is being converted to text via your backend (
+            <strong>OpenAI Whisper</strong>) — see{' '}
+            <code className="panic__code">panicServices.ts</code>.
           </p>
         </section>
       )}
@@ -432,6 +435,12 @@ export function PanicFlow({ services = defaultPanicServices }: Props) {
           <p className="panic__panel-desc">
             Edit the text if anything looks wrong, then send the alert.
           </p>
+          {detectedLanguage && (
+            <p className="panic__panel-desc panic__panel-desc--muted">
+              Whisper detected language:{' '}
+              <strong>{detectedLanguage}</strong>
+            </p>
+          )}
           <div className="panic__field">
             <label className="panic__label" htmlFor="panic-transcript">
               Transcript <span className="panic__label-hint">(editable)</span>
