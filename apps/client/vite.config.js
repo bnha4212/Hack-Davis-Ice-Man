@@ -1,10 +1,20 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// Load `.env*` from monorepo root (where teams often put `VITE_*`) as well as `apps/client/`.
+const repoRoot = path.resolve(__dirname, '../..')
+
 export default defineConfig({
+  envDir: repoRoot,
   server: {
-    host: true,
+    // Use localhost so `vite` does not depend on enumerating all NICs (fixes some CI/sandbox setups).
+    // Set `host: true` if you need LAN URLs from another device on the same network.
+    host: 'localhost',
+    port: 5173,
   },
   plugins: [
     react(),

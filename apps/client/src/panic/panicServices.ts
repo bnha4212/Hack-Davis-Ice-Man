@@ -1,13 +1,13 @@
+import { API_ROUTES, SERVER_URL } from '@iceman/shared'
+
 /**
  * Panic pipeline adapters — swap implementations without changing the UI.
  *
  * --------------------------------------------------------------------------
- * TODO — Whisper (or other STT)
+ * Whisper — speech-to-text
  * --------------------------------------------------------------------------
- * Replace `mockTranscribeAudio`:
- * - POST `audio` (multipart or base64) to your backend or OpenAI `/v1/audio/transcriptions`.
- * - Do not expose API keys in the browser; call from a server you control.
- * - Return the transcript string (and handle errors / timeouts).
+ * `transcribeAudioOpenAI` POSTs the recording to `backend` `/api/panic/transcribe`
+ * (OpenAI Whisper via server; never put OPENAI_API_KEY in the client).
  *
  * --------------------------------------------------------------------------
  * TODO — Claude (or other LLM)
@@ -37,21 +37,79 @@ export type PanicSmsPayload = {
   message: BilingualMessage
 }
 
+/** Whisper returns transcript text + detected spoken language (multilingual STT). */
+export type TranscriptResult = {
+  transcript: string
+  /** e.g. `english`, `spanish` — from Whisper `verbose_json`, when available */
+  language?: string
+}
+
 export type PanicServices = {
-  transcribeAudio: (audio: Blob) => Promise<string>
+  /** Optional ISO 639-1 hint (e.g. `es`, `en`) helps Whisper when you know the spoken language. */
+  transcribeAudio: (
+    audio: Blob,
+    languageHint?: string,
+  ) => Promise<TranscriptResult>
   composeBilingualResponse: (transcript: string) => Promise<BilingualMessage>
   sendPanicSms: (payload: PanicSmsPayload) => Promise<void>
 }
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-/** Demo only — TODO: Whisper / STT (see file header). */
-export async function mockTranscribeAudio(audio: Blob): Promise<string> {
+/** POST multipart audio to backend → OpenAI Whisper (`whisper-1`, multilingual). */
+export async function transcribeAudioOpenAI(
+  audio: Blob,
+  languageHint?: string,
+): Promise<TranscriptResult> {
+  const formData = new FormData()
+  const filename = audio.type.includes('mp4')
+    ? 'recording.mp4'
+    : audio.type.includes('webm')
+      ? 'recording.webm'
+      : 'recording.webm'
+  formData.append('audio', audio, filename)
+  if (languageHint?.trim()) {
+    formData.append('language', languageHint.trim().slice(0, 5))
+  }
+
+  const res = await fetch(`${SERVER_URL}${API_ROUTES.PANIC_TRANSCRIBE}`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  const raw = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const msg =
+      typeof raw.error === 'string'
+        ? raw.error
+        : `Transcription failed (${res.status})`
+    throw new Error(msg)
+  }
+
+  const transcript = typeof raw.transcript === 'string' ? raw.transcript : ''
+  const language =
+    typeof raw.language === 'string' ? raw.language : undefined
+
+  return { transcript: transcript.trim(), language }
+}
+
+/** Offline / no-backend demo — swap for `transcribeAudioOpenAI` in production. */
+export async function mockTranscribeAudio(
+  audio: Blob,
+  _languageHint?: string,
+): Promise<TranscriptResult> {
   await delay(650)
   if (audio.size < 200) {
-    return '[Demo] Recording was very short — please hold the button a little longer next time.'
+    return {
+      transcript:
+        '[Demo] Recording was very short — please hold the button a little longer next time.',
+    }
   }
-  return '[Demo transcript] I need help. I am in an uncomfortable situation and would like someone to check on me or meet me at my location.'
+  return {
+    transcript:
+      '[Demo transcript] I need help. I am in an uncomfortable situation and would like someone to check on me or meet me at my location.',
+    language: 'english',
+  }
 }
 
 /** Demo only — TODO: Claude / LLM (see file header). */
@@ -73,9 +131,9 @@ export async function mockSendPanicSms(payload: PanicSmsPayload): Promise<void> 
   }
 }
 
-/** Wire real APIs by replacing these functions — see TODO blocks at top of file. */
+/** Default: Whisper via your backend. Use `mockTranscribeAudio` for UI-only demos. */
 export const defaultPanicServices: PanicServices = {
-  transcribeAudio: mockTranscribeAudio,
+  transcribeAudio: transcribeAudioOpenAI,
   composeBilingualResponse: mockComposeBilingualResponse,
   sendPanicSms: mockSendPanicSms,
 }
