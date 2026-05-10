@@ -18,6 +18,7 @@ export default function ContactsScreen({ activeScreen, onNavigate }) {
   )
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', phone: '', role: 'Family' })
+  const [smsStatus, setSmsStatus] = useState(null)
 
   const save = (updated) => {
     setContacts(updated)
@@ -34,14 +35,19 @@ export default function ContactsScreen({ activeScreen, onNavigate }) {
   const removeContact = (id) => save(contacts.filter((c) => c.id !== id))
 
   const sendTestSMS = async () => {
+    setSmsStatus('sending')
     try {
-      await fetch(SERVER_URL + '/api/panic/sms', {
+      const res = await fetch(SERVER_URL + '/api/panic/sms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contacts }),
       })
+      const data = await res.json()
+      setSmsStatus(data.ok ? 'sent' : 'error')
     } catch {
-      // Brandon's endpoint stub
+      setSmsStatus('error')
+    } finally {
+      setTimeout(() => setSmsStatus(null), 3000)
     }
   }
 
@@ -209,19 +215,22 @@ export default function ContactsScreen({ activeScreen, onNavigate }) {
           </p>
           <button
             onClick={sendTestSMS}
+            disabled={smsStatus === 'sending'}
             style={{
               marginTop: 10,
               width: '100%',
-              background: '#1e2333',
-              color: '#7eb3f5',
+              background: smsStatus === 'sent' ? '#1a3a2a' : smsStatus === 'error' ? '#3a1d1d' : '#1e2333',
+              color: smsStatus === 'sent' ? '#4ade80' : smsStatus === 'error' ? '#e55c3a' : '#7eb3f5',
               borderRadius: 8,
               padding: '10px',
               fontSize: 13,
               fontWeight: 600,
               border: '1px solid #2e3347',
+              opacity: smsStatus === 'sending' ? 0.6 : 1,
+              transition: 'background 0.2s, color 0.2s',
             }}
           >
-            Send test SMS
+            {smsStatus === 'sending' ? 'Sending…' : smsStatus === 'sent' ? 'Contact notified ✓' : smsStatus === 'error' ? 'Failed to send' : 'Send test SMS'}
           </button>
         </div>
       </div>
